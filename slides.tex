@@ -1,0 +1,38 @@
+\documentclass{beamer}
+ 
+\usepackage[utf8]{inputenc}
+\usepackage{mystyle}
+\usepackage{diagbox}
+
+\newcommand{\LSE}{\textrm{LSE}}
+
+%Information to be included in the title page:
+\title{Kernel Belief Propagation}
+
+\begin{document}
+ 
+\frame{\titlepage}
+ 
+\begin{frame}
+\frametitle{Motivation}
+\begin{itemize}
+\item Difficult to derive belief propagation messages for continuous RVs
+    with complex densities, which typically rely on easy to compute conditionals
+    (ie conjugacy or discrete)
+\item Instead, rewrite messages using \textbf{nonparametric} representations
+of densities, i.e. sums of points in some space
+\item Approach extends to any domain on which kernels can be defined,
+such as strings and graphs
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{}
+\end{frame}
+
+\begin{frame}
+\frametitle{Refs}
+\bibliography{references}
+\end{frame}
+
+\end{document}
