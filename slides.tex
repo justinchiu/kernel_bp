@@ -54,9 +54,9 @@ such as strings and graphs
 \begin{frame}
 \frametitle{Preview: Comparison with Performer-style Inference}
 \begin{itemize}
-\item Both do inference in embedded space using kernels
+\item Both do inference with kernels
 \vspace{1em}
-\item 3 terms in complexity: size of state space, feature dimension, number of samples
+\item Have 3 terms in complexity in common: size of state space, feature dimension, number of samples
 \vspace{1em}
 \item Performer relies on explicit computation of inner products with RFF,
     so complexity is a function of feature dimension and size of state space
@@ -436,9 +436,7 @@ m_{ts}(x_s)
     \Phi^\otimes L^{-1}\phi_{x_s}\Upsilon^\top\rangle\\
 &= (\odot_{u\setminus s} K\beta_{ut})^\top L^{-1}\Upsilon^\top\phi_{x_s},
 \end{align*}
-where $\beta_{ut}\in\R^N$ is some function of $K,L$ and neighouring $\beta$.\footnote{
-Description unclear in this paper, but covered in Song's Nonparametric Tree Graphical Models via 
-Kernel Embeddings paper}
+where $\beta_{ut}\in\R^N$ is some function of $K,L$ and neighouring $\beta$
 \item Upfront $O(N^3)$ matrix inversion cost, $O(|\delta^*|N^2)$ cost per message
 \item Approximations use low-rank approximations of kernel matrices and tensor product
 to limit dependence on $N$ and $|\delta^*|$
@@ -450,6 +448,11 @@ to limit dependence on $N$ and $|\delta^*|$
 \begin{itemize}
 \item Approximations not applicable in Performer setting,
     would just subsample and reweight timesteps
+\vspace{2em}
+\item Avoid space blowup from tensor products by replacing with elementwise
+vector product
+\vspace{2em}
+\item Next: figure out how they train with latent variables
 \end{itemize}
 \end{frame}
 
