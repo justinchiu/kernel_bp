@@ -43,12 +43,31 @@ such as strings and graphs
 \end{frame}
 
 \begin{frame}
-\frametitle{Differences from Performer-style Inference}
+\frametitle{Why is this interesting?}
 \begin{itemize}
-\item Goal is to do approximate nonparametric inference
-\item Performer speedup comes from exact inference in a smaller space
+\item Background is relevant for spectral + kernel methods in latent variable models 
+\vspace{2em}
+\item Keyword overlap with recent work in efficient attention
 \end{itemize}
 \end{frame}
+
+\begin{frame}
+\frametitle{Preview: Comparison with Performer-style Inference}
+\begin{itemize}
+\item Both do inference in embedded space using kernels
+\vspace{1em}
+\item 3 terms in complexity: size of state space, feature dimension, number of samples
+\vspace{1em}
+\item Performer relies on explicit computation of inner products with RFF,
+    so complexity is a function of feature dimension and size of state space
+\vspace{1em}
+\item KBP emphasizes approximate nonparametric inference, complexity is a
+    function of number of samples.
+    Feature dimension is always avoided with kernel trick.
+    Approximations are made to reduce dependence on number of samples.
+\end{itemize}
+\end{frame}
+
 
 \begin{frame}
 \frametitle{Learning in Markov Random Fields}
@@ -66,7 +85,8 @@ via inference, ie the beliefs $\mathbb{B}(X_s, X_t)$ and $\mathbb{B}(X_s)$
 \frametitle{Belief Prop (BP)}
 \begin{itemize}
 \item BP propagates messages from nodes to neighbours iteratively until convergence
-\item Messages from $t$ to $s$
+\vspace{1em}
+\item Messages from node $t$ to $s$
 $$m_{ts}(X_s) = \int_{X_t\in\mcX} \Psi_{st}(X_s, X_t) \Psi_t(X_t)
     \prod_{u\in\delta(t)\setminus\set{s}} m_{ut}(X_t)dX_t$$
 \item Belief at $s$
@@ -79,26 +99,32 @@ with fixed point messages $m^*$
 \frametitle{BP}
 \begin{itemize}
 \item The integrals in the messages may be difficult to compute
-\vspace{2em}
-\item Solution: Rewrite messages as an expectation, then approximate conditional
+\vspace{1em}
+\item Solution: Rewrite messages as an expectation (by dividing by fixed point messages)\footnote{
+Is this an existence statement about messages?
+},
+then approximate conditional
 \begin{align*}
-m_{ts}(X_s) &= \int_\mcX \mathbb{P}^*(X_t \mid X_s)
-\prod_{u \in \delta(t)\setminus\set{s}} m_{ut}(X_t)dX_t\\
+m_{ts}'(X_s) &= \int_\mcX \mathbb{P}^*(X_t \mid X_s)
+\prod_{u \in \delta(t)\setminus\set{s}} m_{ut}'(X_t)dX_t\\
 &= \mathbb{E}_{Xt \mid X_s}\left[
-\prod_{u \in \delta(t)\setminus\set{s}} m_{ut}(X_t)\right]
+\prod_{u \in \delta(t)\setminus\set{s}} m_{ut}'(X_t)\right]
 \end{align*}
 \item Requires fully observed model, otherwise stuck with original integral
+\vspace{1em}
+\item *Take closer look at reparameterization (eqns 1-4),
+    discuss how that affects algorithm
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Nonparametric BP Baselines}
+\frametitle{Issues with Nonparametric BP Baselines}
 \begin{itemize}
-\item Nonparametric BP requires a 2-step process of estimating conditional $\mathbb{P}^*(X_t \mid X_s)$,
-    then computing messages
-\vspace{2em}
 \item NPBP baselines are Gaussian Mixture BP (Sudderth et al, 2003) and 
 Particle BP (Ihler and McAllester, 2009)
+\vspace{2em}
+\item They claim NPBP requires a 2-step process of estimating conditional $\mathbb{P}^*(X_t \mid X_s)$,
+    then computing messages
 \vspace{2em}
 \item Kernel BP reduces this to a single step of matrix-vector products
 \end{itemize}
@@ -116,7 +142,7 @@ Particle BP (Ihler and McAllester, 2009)
 \end{frame}
 
 \begin{frame}
-\frametitle{Kernel Mean Embedding}
+\frametitle{Warmup: Kernel Mean Embedding}
 %% schematic summarization
 \begin{figure}[t!]
   \centering
@@ -158,39 +184,46 @@ Particle BP (Ihler and McAllester, 2009)
 \item Kernel mean embeddings map distributions into Hilbert spaces
 \item Can approximate embedding in RKHS via sampling
 \end{itemize}
-
 \end{frame}
 
-\begin{comment}
-\frametitle{}
-%% from data points to probability measures
-\begin{figure}[t!]
-  \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \includegraphics[width=\textwidth]{survey/points.eps}
-    \caption{$\bx \mapsto k(\bx,\cdot)$}
-    \label{subfig:data-point}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.33\textwidth}
-      \includegraphics[width=\textwidth]{survey/dirac.eps}
-      \caption{$\delta_{\bx} \mapsto \int k(\by,\cdot) d\delta_{\bx}(\by)$}
-      \label{subfig:dirac-measure}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.33\textwidth}
-    \includegraphics[width=\textwidth]{survey/measure.eps}
-    \caption{$\mathbb{P} \mapsto \int k(\bx,\cdot) d\mathbb{P}(\bx)$}
-    \label{subfig:prob-measure}
-  \end{subfigure}
-  \caption{From data points to probability measures: (\subref{subfig:data-point}) An illustration of a  typical application of the kernel as a high-dimensional feature map of an individual data point. (\subref{subfig:dirac-measure}) A measure-theoretic view of high-dimensional feature map. An embedding of data point into a high-dimensional feature space can be equivalently viewed as an embedding of a Dirac measure assigning the mass 1 to each data point. (\subref{subfig:prob-measure}) Generalizing the Dirac measure point of view, we can generally extend the concept of a high-dimensional feature map to the class of probability measures.}
-  \label{fig:from-point-to-measure}
-\end{figure}
-
-\end{comment}
+\begin{frame}
+\frametitle{Kernel Mean Embedding}
+\begin{itemize}
+\item Definition: 
+$$\mu_X(\cdot) = \mathbb{E}_X[\phi_X(\cdot)],$$
+with feature map $\phi = k(x, \cdot) \in \mathscr{H}$
+\vspace{1em}
+\item Goal in this paper is to write everything as an inner product and then apply
+kernel trick
+\vspace{1em}
+\item Using the reproducing property and linearity:
+$$\mathbb{E}_X[f(X)]
+= \mathbb{E}_X[\langle f, \phi_X \rangle]
+= \langle f, \mathbb{E}_X[\phi_X] \rangle
+= \langle f, \mu_X\rangle, \forall f \in \mathscr{H},$$
+so we can write expected functions of RVs as inner products
+\vspace{1em}
+\item Consider categorical distribution with $\phi(\bx)$ one-hot:
+    $\mu_X = P(X)$.
+\end{itemize}
+\end{frame}
 
 \begin{frame}
-\frametitle{Conditional Distribution Embedding}
+\frametitle{Kernel Mean Embedding: Empirical Estimation}
+\begin{itemize}
+\item Some notation: With samples $\set{X^n}_{n=1}^N\sim \mathbb{P}(X)$,
+let $\Phi= [\phi(X^1), \cdots, \phi(X^N)] \in \R^{D\times N}$ be the feature matrices
+(assuming finite dim $D$ feature space)
+\vspace{2em}
+\item We can approximate $\mu_X \approx \Phi^\top\mathbf{1} / m$
+\vspace{2em}
+\item Will use $\Phi$ again later, in the form of kernel matrix
+    $K = \Phi^\top\Phi$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conditional Mean Embedding}
 \begin{figure}[t!]
 \centering
   \begin{tikzpicture}[scale=0.6]
@@ -242,9 +275,9 @@ Particle BP (Ihler and McAllester, 2009)
       \draw[->,color=gray,dashed,very thick] (P1) to[out=45,in=135] (P2);
 
       \node [fill=blue,circle,minimum width=0.05cm] at (P2) {};
-      \node [below,yshift=-0.15cm,xshift=0.6cm, text width=3cm] at (P2) {{\small RKHS embedding of $\mathbb{P}(Y|X=\bx)$}};
+      \node [below,yshift=-0.15cm,xshift=0.6cm, text width=3cm] at (P2) {{\small RKHS embedding of $\mathbb{P}(Y|X=x)$}};
       \node [fill=red,circle,minimum width=0.05cm] at (P1) {};
-      \node [below,yshift=-0.15cm] at (P1) {{\small feature map of $\bx$}};
+      \node [below,yshift=-0.15cm] at (P1) {{\small feature map of $x$}};
 
       \coordinate (n1) at (0,5);
       \coordinate (n2) at (7,5);
@@ -268,18 +301,155 @@ Particle BP (Ihler and McAllester, 2009)
 
 \begin{itemize}
 \item Embed conditional probability function as an operator
+\vspace{1em}
+\item Conditioning operator is a family of functions of $y$ indexed by $x$
 \end{itemize}
-
 \end{frame}
 
 \begin{frame}
-\frametitle{Why the focus on nonparametric?}
+\frametitle{Conditional Mean Embedding}
 \begin{itemize}
-\item The sell is that this works as an approximation for inference in models
-    where the messages are difficult to derive, i.e. complex distributions
+\item Going to need a series of definitions
 \vspace{2em}
-\item Kernel mean embeddings also apply to messages that are easy to derive,
-    but we may want to approximate for computational benefits
+\item Goal is to write $\mathbb{E}_{Y \mid X}[g(Y)]$ as an inner product
+    \vspace{1em}
+    \begin{itemize}
+    \item Recall that messages were rewritten as conditional expectations wrt
+    other messages
+    \vspace{1em}
+    \item  We consider the case when $g$ is a message
+    \end{itemize}
+\vspace{1em}
+\item Will get there by defining the conditional mean embedding
+    then applying similar derivation as marginal mean embedding
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conditional Mean Embedding}
+\begin{itemize}
+\item Two Hilbert spaces $\mathscr{H},\mathscr{G}$ for RVs $X,Y$
+\item Define uncentered cross-covariance operator
+$$C_{YX} = \mathbb{E}_{YX}[\varphi_Y\otimes\phi_X],$$
+for $f \in \mathscr{H}, g \in \mathscr{G}$ and $C_{YX}: \mathscr{H} \to \mathscr{G}$
+\item Has property
+$$\mathbb{E}_{YX}[g(Y)f(X)] = \langle g, C_{YX}f\rangle = \langle g\otimes f, C_{YX} \rangle,$$
+which extends the evaluation property to two variables.
+(Can have $Y = X$ for autocorrelation)
+
+Pf:
+\begin{align*}
+\mathbb{E}_{YX}[g(Y)f(X)]
+&= \mathbb{E}_{YX}[\langle g, \phi_Y\rangle \langle f, \phi_X \rangle]\\
+&= \mathbb{E}_{YX}[\langle g, \langle f, \phi_X\rangle \phi_Y  \rangle]\\
+&= \mathbb{E}_{YX}[\langle g, (\phi_X \otimes \phi_Y)f  \rangle]\\
+&= \langle g, \mathbb{E}_{YX}[\phi_X \otimes \phi_Y]f  \rangle\\
+&= \langle g, C_{YX}f  \rangle
+\end{align*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conditional Mean Embedding}
+\begin{itemize}
+\item Consider the property $C_{XX}\mathbb{E}_{Y\mid X}[g(Y)\mid X] = C_{XY}g$ (Fukumitsu 2004).
+
+Pf: $\forall f \in \mathscr{H}$,
+\begin{align*}
+\langle f, C_{XX}\mathbb{E}_{Y\mid X}[g(Y)\mid X] \rangle
+&= \mathbb{E}_{X}[f(X) \mathbb{E}_{Y \mid X}[g(Y) \mid X]]\\
+&= \mathbb{E}_{XY}[f(X) g(Y)]\\
+&= \langle f, C_{XY}g\rangle
+\end{align*}
+\item Using the above property,
+\begin{align*}
+\mathbb{E}_{Y\mid X=x}[g(Y)\mid X=x]
+&= \langle \mathbb{E}_{Y\mid X}[g(Y)\mid X], \phi_x\rangle\\
+&= \langle C_{XX}^{-1}C_{XY}g, \phi_x\rangle\\
+&= \langle g, C_{YX}C_{XX}^{-1}\phi_x\rangle\\
+\end{align*}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conditional Mean Embedding: Empirical Estimation}
+\begin{itemize}
+\item Samples $\set{X^n}_{n=1}^N\sim \mathbb{P}(X), \set{Y^n}_{n=1}^N\sim \mathbb{P}(Y)$,
+\item Feature matrices (assuming finite feature dim)
+$$\Phi= [\phi(X^1), \cdots, \phi(X^N)] \in \R^{D\times N},$$
+$$\Upsilon= [\varphi(Y^1), \cdots, \varphi(Y^N)] \in \R^{D\times N},$$
+with feature maps $\phi,\varphi$ for Hilbert spaces $\mathscr{H},\mathscr{G}$
+of functions from $\mcX\mapsto\R,\mcY\mapsto\R$ respectively
+\item We can approximate cross-covariance operator with
+$C_{YX} \approx \Upsilon\Phi^\top / m$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Product Space Embeddings}
+\begin{itemize}
+\item We have to deal with multiple neighbours and messages
+\vspace{1em}
+\item Consider product Hilbert space $\mathscr{H}^\otimes = \prod_i \mathscr{H}_i$
+    and product feature map $\xi$, so that $\xi(x) = \otimes_i \phi_i(x)$,
+    the feature maps of the underlying spaces
+\vspace{1em}
+\item Recall tensor product $(f \otimes g)h = \langle g, h \rangle f$ where $f,g,h\in\mathscr{H}$
+\vspace{1em}
+\item For the case of message passing,
+    generalizes to $\prod_i \langle f, \phi(x) \rangle = \langle \otimes_u f, \xi(x) \rangle$ 
+\vspace{1em}
+\item Not totally clear on the details, but can view $\xi(x)$ as just another function
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Kernel Belief Propagation Messages}
+\begin{itemize}
+\item Back to message passing:
+\begin{align*}
+m_{ts}(x_s)
+&= \mathbb{E}_{Xt \mid x_s}[\prod_{u\in\delta(t)\setminus\set{s}}m_{ut}(X_t)]\\
+&= \mathbb{E}_{Xt \mid x_s}[\prod_{u\in\delta(t)\setminus\set{s}} \langle m_{ut}, \phi_{X_t}\rangle]\\
+&= \mathbb{E}_{Xt \mid x_s}[\langle \otimes_{u\setminus s} m_{ut}, \xi_{X_t}\rangle]\\
+&= \langle \otimes_{u\setminus s} m_{ut}, \mathbb{E}_{Xt \mid x_s}[\xi_{X_t}]\rangle\\
+&= \langle \otimes_{u\setminus s} m_{ut}, C_{X_t^\otimes X_s}C_{X_sX_s}^{-1}\phi_{x_s}\rangle
+\end{align*}
+\item And that's it! Now for empirical estimation and efficient computation
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Empirical Estimation}
+\begin{itemize}
+\item Key point: Avoids ever instantiating tensor products.\footnote{This is what messed up the runtime
+    in my version of kernelized inference. Not sure if this transfers to our setting,
+    but likely does since it seems to be a property of tensor products.}
+\item $N$ data points, $D$ feature dim
+\item Feature matrices
+$\Phi, \Upsilon, \Phi^\otimes: R^{D \times N}$ for $X_t, X_s, X_t^\otimes$
+and kernels $K = \Phi^\top\Phi, L = \Upsilon^\top\Upsilon$
+\begin{align*}
+m_{ts}(x_s)
+&= \langle \otimes_{u\setminus s} m_{ut}, C_{X_t^\otimes X_s}C_{X_sX_s}^{-1}\phi_{x_s}\rangle\\
+&\approx \langle \otimes_{u\setminus s} \Phi\beta_{ut},
+    \Phi^\otimes L^{-1}\phi_{x_s}\Upsilon^\top\rangle\\
+&= (\odot_{u\setminus s} K\beta_{ut})^\top L^{-1}\Upsilon^\top\phi_{x_s},
+\end{align*}
+where $\beta_{ut}\in\R^N$ is some function of $K,L$ and neighouring $\beta$.\footnote{
+Description unclear in this paper, but covered in Song's Nonparametric Tree Graphical Models via 
+Kernel Embeddings paper}
+\item Upfront $O(N^3)$ matrix inversion cost, $O(|\delta^*|N^2)$ cost per message
+\item Approximations use low-rank approximations of kernel matrices and tensor product
+to limit dependence on $N$ and $|\delta^*|$
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conclusion}
+\begin{itemize}
+\item Approximations not applicable in Performer setting,
+    would just subsample and reweight timesteps
 \end{itemize}
 \end{frame}
 
@@ -297,13 +467,6 @@ ie that function evaluation is an inner product,
 $$\langle f, K(x, \cdot) \rangle = f(x),$$
 implies the reproducing property:
 $$ \langle K(x,\cdot), K(y, \cdot) \rangle = K(x,y) = \langle \phi(x), \phi(y) \rangle$$
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Why is reproducing property needed}
-\begin{itemize}
-\item ???
 \end{itemize}
 \end{frame}
 
